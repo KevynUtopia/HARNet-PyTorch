@@ -1,3 +1,2 @@
-# HARNet-Pytorch
+# HARNet-PyTorch
 
-`trian.h5` is the dataset in format of hdf5.
