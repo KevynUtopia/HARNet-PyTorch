@@ -1,43 +1,24 @@
-import os
-import random
-import cv2
-import torch
-from torch.utils.data import Dataset
-from PIL import Image
-from torchvision import transforms
-
-class MyDateSet(Dataset):
-    def __init__(self, imageFolder, labelFolder):
-        self.imageFolder = imageFolder
-        self.images = os.listdir(imageFolder)
-        self.labelFolder = labelFolder
-        self.labels = os.listdir(labelFolder)
-        
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index):
-        image_name = self.images[index]
-        image_name = os.path.join(self.imageFolder, image_name)
-        label_name = self.labels[index]
-        label_name = os.path.join(self.labelFolder, label_name)
-        
-        # image_read = cv2.imread(image_name)
-        # label_read = cv2.imread(label_name)
-        transform = transforms.Compose([
-                            transforms.Grayscale(num_output_channels=1),
-                            transforms.ToTensor()
-                        ])
-        image_read = Image.open(image_name).convert('RGB')
-        label_read = Image.open(label_name).convert('RGB')
-        
-        # X = torch.Tensor(image_read)
-        # Y = torch.Tensor(label_read)
-
-        X = transform(image_read)
-        Y = transform(label_read)
-
-        x=torch.reshape(X,(1,400,400))
-        y=torch.reshape(Y,(1,400,400))
-        return x, y
+def eval(eval_model, dataset):
+      cuda = torch.cuda.is_available()
+  test_model = eval_model['model']
+  eval_mse, eval_psnr, eval_ssim, eval_loss = 0.0, 0.0, 0.0, 0.0
+  with torch.no_grad():
+    for i, data in enumerate(dataset):
+      torch.cuda.empty_cache()
+      x, y = data
+      X, Y = Variable(x, requires_grad=False), Variable(y, requires_grad=False)
+      if cuda:
+        X = X.cuda()
+        Y = Y.cuda()
+      out = test_model(X)
+      mse = Loss(out, Y)
+      eval_mse += mse
+      psnr = 10 * math.log10(255 * 255 / mse)
+      eval_psnr += psnr
+      ssim = 1-ssim_loss(out, Y)
+      eval_ssim += ssim
+      loss = mse + (1 - ssim)
+      eval_loss += loss
+      torch.cuda.empty_cache()
+  print("Evaluation:")
+  print("MSE: %.5f, PSNR: %.5f, SSIM: %.5f, LOSS: %.5f" %(eval_mse/90, eval_psnr/90, 1-eval_ssim/90, eval_loss/90))

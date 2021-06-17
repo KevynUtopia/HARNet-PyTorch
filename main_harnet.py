@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 from dataset import MyDateSet
 from harnet import HARNet
+import eval
 
 def main():
 
@@ -47,7 +48,20 @@ def main():
         save_checkpoint(model, epoch)
     print('Finished Training')
 
+    #Evaluate the model
+    model_path='./checkpoint/model_epoch_150.pth' #configure path of the model
+    test_data_label = "./OCT500_processed/test/data_label.txt" #configure path of the test data
+    test_data_path = "./OCT500_processed/test/data"
+    test_label_path = "./OCT500_processed/test/label"
 
+    test_model = torch.load(model_path)
+    test_set = MyDateSet(test_data_label, test_data_path, test_label_path)
+    test_data = DataLoader(dataset=test_set, num_workers=2, batch_size=1, shuffle=False)
+    Loss = nn.MSELoss()
+    ssim_loss = SSIM(window_size = 10)
+
+    eval(test_model, test_data)
+    
 
 
 
