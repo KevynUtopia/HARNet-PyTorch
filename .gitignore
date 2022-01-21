@@ -1,1 +1,4 @@
-data/*
+data/3x3_256/*
+data/6x6_256/*
+data/testset/3x3_256/*
+data/testset/6x6_256/*
