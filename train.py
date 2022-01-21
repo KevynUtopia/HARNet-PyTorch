@@ -8,10 +8,12 @@ import torch.backends.cudnn as cudnn
 from dataset import MyDateSet
 from harnet import HARNet
 import eval
+import os
+from utils import weights_init_normal
 
 def main():
 
-    data_set = MyDateSet("./training", "./ground_truth")
+    data_set = MyDateSet("./data/6x6_256", "./data/3x3_256")
     train_data = DataLoader(dataset=data_set, num_workers=2, batch_size=1, shuffle=True)
 
     cuda = torch.cuda.is_available()
@@ -19,49 +21,31 @@ def main():
     model = HARNet()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
+    model.apply(weights_init_normal)
     mse_loss = nn.MSELoss()
     adam = optim.Adam(model.parameters())
     
-    for epoch in range(5):
-        running_loss = 0.0
+    for epoch in range(100):
         for i, data in enumerate(train_data):
             x, y = data
             X, Y = Variable(x), Variable(y)
             # print(X.data.size())
             if cuda:
-            X = X.cuda()
-            Y = Y.cuda()
+                X = X.cuda()
+                Y = Y.cuda()
             out = model(X)
 
             adam.zero_grad()
             loss = mse_loss(out, Y)
             loss.backward()
             adam.step()
-            running_loss += loss
+
             if i % 10 == 0:
-                print("epoch %d/5, batch %d/300" %((epoch+1), (i+1)))
-            if i % 100 == 99:  # print every 100
-                print('[%d, %5d] loss: %.3f' %
-                        (epoch + 1, i + 1, running_loss / 100))
-            running_loss = 0.0
-        print("epoch %d /5, Loss: %f" %((epoch+1), running_loss/len(data_set)))
+                print("epoch %d/100" %(epoch+1))
+
+        eval(model)
         save_checkpoint(model, epoch)
     print('Finished Training')
-
-    #Evaluate the model
-    model_path='./checkpoint/model_epoch_150.pth' #configure path of the model
-    test_data_label = "./OCT500_processed/test/data_label.txt" #configure path of the test data
-    test_data_path = "./OCT500_processed/test/data"
-    test_label_path = "./OCT500_processed/test/label"
-
-    test_model = torch.load(model_path)
-    test_set = MyDateSet(test_data_label, test_data_path, test_label_path)
-    test_data = DataLoader(dataset=test_set, num_workers=2, batch_size=1, shuffle=False)
-    Loss = nn.MSELoss()
-    ssim_loss = SSIM(window_size = 10)
-
-    eval(test_model, test_data)
-    
 
 
 
