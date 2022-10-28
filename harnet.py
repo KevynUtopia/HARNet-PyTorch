@@ -48,21 +48,21 @@ class HARNet(nn.Module):
         output = self.relu(self.conv3(output)) # (1, 64, 400, 400)
         # for _ in range(19):
         #   output = self.relu(self.conv_block(output)) # (1, 64, 400, 400)
-        output = self.relu(self.conv_block1(output)) 
+        output = self.relu(self.conv_block2(output)) 
         output = torch.cat((output, block_residual), 1) # (1, 256, 400, 400)
 
         block_residual = output
         output = self.relu(self.conv4(output)) # (1, 64, 400, 400)
         # for _ in range(19):
         #   output = self.relu(self.conv_block(output)) # (1, 64, 400, 400)
-        output = self.relu(self.conv_block1(output)) 
+        output = self.relu(self.conv_block3(output)) 
         output = torch.cat((output, block_residual), 1) # (1, 320, 400, 400)
 
         block_residual = output
         output = self.relu(self.conv5(output)) # (1, 64, 400, 400)
         # for _ in range(19):
         #   output = self.relu(self.conv_block(output)) # (1, 64, 400, 400)
-        output = self.relu(self.conv_block1(output)) 
+        output = self.relu(self.conv_block4(output)) 
         output = torch.cat((output, block_residual), 1) # (1, 384, 400, 400)
 
         output = self.conv6(output)
